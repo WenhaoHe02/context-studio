@@ -1,0 +1,15 @@
+{
+  "name": "codex-context-studio",
+  "version": "0.3.0",
+  "author": "Wenhao He",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "start": "node --no-warnings server.mjs --open",
+    "test": "node --no-warnings --test"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

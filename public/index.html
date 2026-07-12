@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Codex Context Studio</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">C</div>
+        <div>
+          <h1>Context Studio</h1>
+          <p>最好的 Human-in-the-loop</p>
+        </div>
+      </div>
+      <div class="top-actions">
+        <button id="browserButton" class="button primary" title="在系统浏览器中打开高速工作台">↗ 浏览器工作台</button>
+        <button id="fullscreenButton" class="button ghost" title="在 Codex 中全屏显示">⛶ 全屏</button>
+        <span id="dirtyBadge" class="badge hidden">有未保存修改</span>
+        <button id="themeToggle" class="button ghost" title="切换主题">☀ 亮色</button>
+        <button id="backupButton" class="button ghost" disabled>手动备份</button>
+        <button id="reloadButton" class="button ghost" disabled>重新载入</button>
+        <button id="saveButton" class="button primary" disabled>保存并备份</button>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <aside class="sidebar panel">
+        <div class="panel-heading">
+          <div>
+            <span class="eyebrow">ROLLUTS</span>
+            <h2>任务记录</h2>
+          </div>
+          <button id="refreshButton" class="icon-button" title="刷新">↻</button>
+        </div>
+        <label class="search-box">
+          <span>⌕</span>
+          <input id="searchInput" type="search" placeholder="搜索路径或线程…" />
+        </label>
+        <div id="rolloutList" class="rollout-list">
+          <div class="empty">正在读取 Codex sessions…</div>
+        </div>
+      </aside>
+
+      <section class="editor panel">
+        <div id="emptyEditor" class="empty-editor">
+          <div class="empty-icon">↯</div>
+          <h2>选择一个空闲任务</h2>
+          <p>结构记录会被锁定；只有用户、助手文本和成对工具输出可编辑。</p>
+        </div>
+
+        <div id="editorContent" class="hidden">
+          <div class="file-header">
+            <div>
+              <div class="file-title-row">
+                <h2 id="fileTitle"></h2>
+                <span id="idleBadge" class="badge"></span>
+              </div>
+              <p id="filePath" class="mono file-path"></p>
+            </div>
+            <div class="file-meta">
+              <span id="threadId"></span>
+              <span id="validationBadge"></span>
+            </div>
+          </div>
+          <div class="toolbar">
+            <div class="segmented" role="group" aria-label="过滤器">
+              <button class="segment active" data-filter="all">全部</button>
+              <button class="segment" data-filter="active">当前有效</button>
+              <button class="segment" data-filter="editable">可修改</button>
+              <button class="segment" data-filter="message">消息</button>
+              <button class="segment" data-filter="tool-output">工具输出</button>
+              <button class="segment" data-filter="deletable">可删除</button>
+              <button class="segment" data-filter="locked">系统只读</button>
+              <button class="segment" data-filter="archived">归档</button>
+            </div>
+            <label class="inline-search">
+              <span>⌕</span>
+              <input id="entrySearch" type="search" placeholder="搜索当前上下文" />
+            </label>
+          </div>
+          <div id="entryList" class="entry-list"></div>
+        </div>
+      </section>
+
+      <aside class="inspector panel">
+        <div class="panel-heading">
+          <div>
+            <span class="eyebrow">TOKEN BUDGET</span>
+            <h2>上下文预算</h2>
+          </div>
+        </div>
+        <div class="budget-ring-wrap">
+          <div id="budgetRing" class="budget-ring">
+            <div><strong id="budgetPercent">—</strong><span>修改后输入占用</span></div>
+          </div>
+        </div>
+        <div class="metric-list">
+          <div><span>完整日志可见历史</span><strong id="historyTokens">—</strong></div>
+          <div><span>当前有效历史</span><strong id="editedTokens">—</strong></div>
+          <div><span>有效历史已减少</span><strong id="savedTokens" class="positive">—</strong></div>
+          <div><span>外部/注入上下文估算</span><strong id="externalTokens">—</strong></div>
+          <div class="total"><span>修改后输入估算</span><strong id="projectedTokens">—</strong></div>
+        </div>
+        <p id="budgetNote" class="section-note budget-note">基于最近一次真实输入校准；不会把 compact 前的旧历史重复计入。</p>
+
+        <div class="inspector-section">
+          <h3>上次服务端统计</h3>
+          <div id="actualUsage" class="actual-usage muted">选择任务后显示</div>
+        </div>
+        <div class="inspector-section">
+          <h3>备份版本</h3>
+          <select id="backupVersions" class="backup-select" disabled>
+            <option value="">暂无备份</option>
+          </select>
+          <button id="restoreButton" class="button ghost full-button" disabled>恢复所选版本</button>
+          <p class="section-note">首次保存修改会自动保留初始版本；之后仅手动备份。</p>
+        </div>
+        <div class="inspector-section">
+          <h3>保存保护</h3>
+          <ul id="guardrailList" class="guardrails">
+            <li>文件哈希竞态检查</li>
+            <li>活动 turn 检测</li>
+            <li>工具调用配对校验</li>
+            <li>自动备份与原子替换</li>
+          </ul>
+        </div>
+      </aside>
+    </main>
+
+    <div id="toast" class="toast hidden" role="status"></div>
+    <div id="confirmModal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+      <div class="modal">
+        <span class="eyebrow">FINAL CHECK</span>
+        <h2>保存到原 rollout？</h2>
+        <p>Context Studio 会先创建备份，再用经过验证的新文件原子替换原 JSONL。</p>
+        <div id="saveSummary" class="save-summary"></div>
+        <label class="confirm-check"><input id="idleConfirm" type="checkbox" /> 我确认 Codex 当前没有处理这个任务</label>
+        <div class="modal-actions">
+          <button id="cancelSave" class="button ghost">取消</button>
+          <button id="confirmSave" class="button danger" disabled>创建备份并保存</button>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

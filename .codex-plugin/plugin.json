@@ -1,0 +1,25 @@
+{
+  "name": "codex-context-studio",
+  "version": "0.3.0+codex.20260712164640",
+  "description": "Safely inspect, edit, and budget Codex rollout context while Codex is idle.",
+  "author": {
+    "name": "Wenhao He"
+  },
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Codex Context Studio",
+    "shortDescription": "Edit rollout context with structural guardrails.",
+    "longDescription": "A local visual editor for Codex rollout JSONL files with safe generated-item deletion, token estimates, live status, versioned backups, race detection, validation, and atomic saves.",
+    "developerName": "Wenhao He",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Open Context Studio for an idle Codex task."
+    ]
+  }
+}

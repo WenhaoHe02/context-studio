@@ -112,9 +112,7 @@ function renderRollouts() {
     <div class="sub"><span><i class="status-dot ${item.status?.idle ? "" : "active"}"></i>${item.status?.idle ? "空闲" : "运行中"}${child ? " · 局部上下文" : ""}</span><span>${fmtTime(item.mtimeMs)}</span></div>
     <div class="sub"><span>${fmtBytes(item.size)}</span><span>${escapeHtml((item.threadId || "").slice(0, 8))}</span></div>
   </button>`;
-    if (!child) return card;
-    const embedded = typeof window.__CONTEXT_STUDIO_MCP_CALL__ === "function";
-    return `<div class="subagent-row">${card}<button class="fork-parent-button" data-child="${escapeHtml(item.threadId)}" data-parent="${escapeHtml(item.parentThreadId)}" ${embedded ? "" : "disabled"} title="${embedded ? "让父任务创建一个继承完整父上下文的新子代理" : "仅嵌入式 MCP App 支持"}">Fork 父上下文</button></div>`;
+    return child ? `<div class="subagent-row">${card}</div>` : card;
   };
   els.rolloutList.innerHTML = groups.map(({ root, children }) => {
     const childMatch = q && children.some(matches);
@@ -130,30 +128,6 @@ function renderRollouts() {
     if (state.expandedParents.has(parent)) state.expandedParents.delete(parent); else state.expandedParents.add(parent);
     renderRollouts();
   }));
-  els.rolloutList.querySelectorAll(".fork-parent-button").forEach((button) => button.addEventListener("click", () => requestSubagentFork(button)));
-}
-
-async function requestSubagentFork(button) {
-  const child = state.rollouts.find((item) => item.threadId === button.dataset.child);
-  const parent = state.rollouts.find((item) => item.threadId === button.dataset.parent);
-  if (!child || !parent) return showToast("父任务或子代理已经不存在，请刷新后重试。", true);
-  if (!parent.status?.idle) return showToast("父任务仍在运行，必须等它空闲后才能完整继承上下文。", true);
-  const task = prompt("新子代理要执行什么任务？可以在这里调整原子代理的任务说明。", child.title || "");
-  if (task === null) return;
-  if (!task.trim()) return showToast("任务说明不能为空。", true);
-  if (!confirm(`将让父任务“${parent.title}”创建一个继承其全部已完成上下文的新子代理。原子代理不会被删除。继续吗？`)) return;
-  button.disabled = true;
-  try {
-    const result = await api("/api/subagent-fork", {
-      method: "POST",
-      body: JSON.stringify({ childThreadId: child.threadId, parentThreadId: parent.threadId, task: task.trim() }),
-    });
-    if (result.forkRequested) showToast("已请求父任务创建完整上下文子代理；左侧列表会自动刷新。", false, { centered: true, duration: 5000 });
-  } catch (error) {
-    showToast(`${error.code || "SUBAGENT_FORK_FAILED"}: ${error.message}`, true);
-  } finally {
-    button.disabled = false;
-  }
 }
 
 async function openRollout(filePath, force = false) {
@@ -339,7 +313,15 @@ function renderUsage() {
   if (!last) els.actualUsage.textContent = "该 rollout 没有可用的 token_count 事件。";
   else {
     const reference = usage.reference_input_usage || last;
-    els.actualUsage.innerHTML = `最近请求输入 <strong>${fmtNumber(reference.input_tokens)}</strong><br>其中缓存命中 <strong>${fmtNumber(reference.cached_input_tokens)}</strong><br>该次模型输出 <strong>${fmtNumber(reference.output_tokens)}</strong><br>模型窗口 <strong>${fmtNumber(usage.model_context_window || state.current.meta.contextWindow)}</strong>`;
+    const input = Math.max(0, Number(reference.input_tokens) || 0);
+    const cached = Math.min(input, Math.max(0, Number(reference.cached_input_tokens) || 0));
+    const uncached = Math.max(0, input - cached);
+    const hitRate = input ? `${((cached / input) * 100).toFixed(1)}%` : "暂无官方统计";
+    const totalUsage = usage.total_token_usage;
+    const totalInput = Math.max(0, Number(totalUsage?.input_tokens) || 0);
+    const totalCached = Math.min(totalInput, Math.max(0, Number(totalUsage?.cached_input_tokens) || 0));
+    const totalHitRate = totalInput ? `${((totalCached / totalInput) * 100).toFixed(1)}%` : "暂无官方统计";
+    els.actualUsage.innerHTML = `最近请求输入 <strong>${fmtNumber(input)}</strong><br>缓存命中 <strong>${fmtNumber(cached)}</strong><br>非缓存输入 <strong>${fmtNumber(uncached)}</strong><br>缓存命中率 <strong>${hitRate}</strong><br>会话累计命中率 <strong>${totalHitRate}</strong><br>该次模型输出 <strong>${fmtNumber(reference.output_tokens)}</strong><br>模型窗口 <strong>${fmtNumber(usage.model_context_window || state.current.meta.contextWindow)}</strong>`;
   }
   renderBudget();
 }

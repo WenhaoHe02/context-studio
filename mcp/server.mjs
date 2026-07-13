@@ -247,16 +247,15 @@ const tools = [
   },
   {
     name: "context_studio_subagent_fork",
-    title: "Fork Full Parent Context to a Subagent",
-    description: "Validate a selected parent/subagent pair and request that the parent create a replacement subagent with fork_turns=all.",
+    title: "Fork Parent Context (Temporarily Disabled)",
+    description: "Fork is temporarily disabled while registered-task and subagent reuse semantics are being redesigned.",
     inputSchema: {
       type: "object",
       properties: {
         childThreadId: { type: "string" },
         parentThreadId: { type: "string" },
-        task: { type: "string", minLength: 1, maxLength: 4000 },
       },
-      required: ["childThreadId", "parentThreadId", "task"],
+      required: ["childThreadId", "parentThreadId"],
       additionalProperties: false,
     },
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
@@ -327,14 +326,7 @@ async function callTool(name, args) {
     });
   }
   if (name === "context_studio_subagent_fork") {
-    const prepared = prepareSubagentFork(args || {});
-    return appToolResult({
-      forkRequested: true,
-      childThreadId: prepared.childThreadId,
-      parentThreadId: prepared.parentThreadId,
-      taskName: prepared.taskName,
-      hostActionPrompt: prepared.hostActionPrompt,
-    });
+    return prepareSubagentFork(args || {});
   }
   if (name === "commit_staged_context_action") {
     const stage = commitStagedAction(args?.requestId);

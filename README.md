@@ -6,6 +6,8 @@
 
 **A local, human-in-the-loop workbench for inspecting, budgeting, and carefully editing Codex rollout context.**
 
+**See official token usage and live cache hit rates at a glance.**
+
 [简体中文](README.zh-CN.md) · **English**
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-8ef0c1.svg?style=flat-square)](LICENSE)
@@ -29,7 +31,7 @@ Long Codex tasks accumulate messages, reasoning state, tool transactions, skill 
 - **Context-aware editing** — edit user/assistant text and matched string tool outputs; structural records stay locked.
 - **Safe whole-item deletion** — remove completed reasoning, paired tool/MCP transactions, and pure skill fragments after the latest compaction.
 - **Official token calibration** — combine per-item estimates with Codex `token_count` events.
-- **Cache analytics** — latest-request and cumulative cache hit rates, plus cached and uncached input tokens.
+- **Visible cache hit rates** — see official latest-request and cumulative hit rates directly in the sidebar, with cached and uncached input tokens separated.
 - **Backup discipline** — one immutable pre-edit original, followed only by user-requested manual versions.
 - **Race-resistant writes** — idle checks, SHA-256 comparison, archive/unload workflow, structural validation, and atomic replacement.
 - **Light and dark themes** — responsive three-pane UI with a fast localhost browser workbench.

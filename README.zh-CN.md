@@ -11,12 +11,9 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-8ef0c1.svg?style=flat-square)](LICENSE)
 [![Node.js 20+](https://img.shields.io/badge/node-%E2%89%A520-59d6a1.svg?style=flat-square)](package.json)
 [![Dependencies: zero](https://img.shields.io/badge/runtime_dependencies-0-8bb8ff.svg?style=flat-square)](package.json)
-[![Status: experimental](https://img.shields.io/badge/status-experimental-f4c36b.svg?style=flat-square)](#项目状态)
+[![Status: beta](https://img.shields.io/badge/status-beta-59d6a1.svg?style=flat-square)](#项目状态)
 
 </div>
-
-> [!WARNING]
-> Context Studio 会编辑 Codex 私有的本地会话格式，该格式不是稳定的公开 API。请先用一次性任务测试、保留独立备份，并且绝对不要编辑正在运行的任务。
 
 ## 为什么需要 Context Studio？
 
@@ -59,7 +56,7 @@ flowchart LR
 - call ID、工具名、非字符串输出和加密 reasoning 元数据；
 - 未完成 turn 与已经变更的文件。
 
-这些保护只能降低风险，不能让不断变化的私有格式变得绝对安全。Rollout 与备份可能包含提示词、源代码、凭据、本地路径和敏感工具输出。
+在已经测试的 Windows 环境中，受保护的查看、编辑、备份与恢复流程可以稳定运行。Codex 的本地格式仍可能随版本变化；rollout 与备份也可能包含提示词、源代码、凭据、本地路径和敏感工具输出。
 
 ## 快速开始
 
@@ -179,7 +176,7 @@ test/                   合成 rollout 安全测试
 
 ## 项目状态
 
-Context Studio 目前为实验性项目。Fork 功能已在 UI 与后端同时暂停，直到“正常注册任务”和“子代理复用”语义可以被安全实现。
+Context Studio 目前处于 Beta 阶段。在已经测试的 Windows 环境中，受保护的查看、编辑、备份、恢复、Token 预算与浏览器工作台流程可以稳定运行。Fork 功能仍在 UI 与后端同时暂停，直到“正常注册任务”和“子代理复用”语义可以被安全实现。
 
 计划方向：
 
@@ -205,4 +202,3 @@ python /path/to/plugin-creator/scripts/validate_plugin.py .
 ## 许可证
 
 [MIT](LICENSE) © 2026 [Wenhao He](https://github.com/WenhaoHe02)
-

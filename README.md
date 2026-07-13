@@ -11,12 +11,9 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-8ef0c1.svg?style=flat-square)](LICENSE)
 [![Node.js 20+](https://img.shields.io/badge/node-%E2%89%A520-59d6a1.svg?style=flat-square)](package.json)
 [![Dependencies: zero](https://img.shields.io/badge/runtime_dependencies-0-8bb8ff.svg?style=flat-square)](package.json)
-[![Status: experimental](https://img.shields.io/badge/status-experimental-f4c36b.svg?style=flat-square)](#project-status)
+[![Status: beta](https://img.shields.io/badge/status-beta-59d6a1.svg?style=flat-square)](#project-status)
 
 </div>
-
-> [!WARNING]
-> Context Studio edits Codex's private on-disk session format. That format is not a stable public API. Use disposable tasks first, keep independent backups, and never edit a running task.
 
 ## Why Context Studio?
 
@@ -59,7 +56,7 @@ Context Studio deliberately protects:
 - call IDs, tool names, non-string output structures, and encrypted reasoning metadata;
 - incomplete turns and stale files.
 
-These protections reduce risk; they cannot make a private, evolving storage format risk-free. Rollouts and backups may contain prompts, source code, credentials, local paths, and sensitive tool output.
+The guarded inspect, edit, backup, and restore workflows are stable on the tested Windows setup. Codex's on-disk format can still change between Codex releases, and rollouts or backups may contain prompts, source code, credentials, local paths, and sensitive tool output.
 
 ## Quick start
 
@@ -179,7 +176,7 @@ test/                   Synthetic rollout safety tests
 
 ## Project status
 
-Context Studio is experimental. The fork feature is currently disabled in both UI and backend while registered-task and subagent-reuse semantics are redesigned.
+Context Studio is in beta. Its guarded inspect, edit, backup, restore, token-budget, and browser-workbench workflows are stable on the tested Windows setup. The fork feature remains disabled in both UI and backend while registered-task and subagent-reuse semantics are redesigned.
 
 Planned work:
 
@@ -205,4 +202,3 @@ Contributions are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) before openin
 ## License
 
 [MIT](LICENSE) © 2026 [Wenhao He](https://github.com/WenhaoHe02)
-

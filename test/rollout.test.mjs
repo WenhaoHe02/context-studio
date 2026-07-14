@@ -7,7 +7,7 @@ import { applyDeletions, applyPatches, approxTokens, parseJsonl, readRollout, sa
 import { createManualBackup, ensureOriginalBackup, listBackups, restoreBackup } from "../lib/backups.mjs";
 import { discoverRollouts } from "../lib/discovery.mjs";
 import { replaceFileVerified } from "../lib/safe-replace.mjs";
-import { commitStagedAction, stageContextAction, verifyStagedAction } from "../lib/staged-actions.mjs";
+import { commitStagedAction, hotReloadPrompt, stageContextAction, verifyStagedAction } from "../lib/staged-actions.mjs";
 
 function line(type, payload, timestamp = "2026-01-01T00:00:00Z") {
   return JSON.stringify({ timestamp, type, payload });
@@ -135,6 +135,42 @@ test("edits and deletes items inside the latest compacted replacement history", 
   assert.match(output, /archived original/);
   assert.doesNotMatch(output, /compacted reasoning|compact-call|compacted output/);
   assert.equal(doc.validation.ok, true);
+});
+
+test("compacted message edits and deletions synchronize the Desktop-visible original", () => {
+  const turnId = "00000000-0000-7000-8000-000000000123";
+  const message = "remove me everywhere";
+  const compactedItem = {
+    type: "message",
+    role: "user",
+    content: [{ type: "input_text", text: message }],
+    internal_chat_message_metadata_passthrough: { turn_id: turnId },
+  };
+  const records = [
+    line("session_meta", { id: "thread-display-sync", history_mode: "legacy" }),
+    line("event_msg", { type: "task_started", turn_id: turnId }),
+    line("turn_context", { turn_id: turnId }),
+    line("response_item", { type: "message", role: "user", content: [{ type: "input_text", text: message }] }),
+    line("event_msg", { type: "user_message", message, turn_id: turnId }),
+    line("event_msg", { type: "task_complete", turn_id: turnId }),
+    line("compacted", { message: "", replacement_history: [compactedItem] }),
+  ];
+
+  const edited = parseJsonl(Buffer.from(`${records.join("\n")}\n`));
+  const editable = edited.entries.find((entry) => entry.container === "replacement_history");
+  assert.equal(editable.desktopDisplaySync, "matched");
+  applyPatches(edited, [{ id: editable.id, text: "edited everywhere" }]);
+  const editedOutput = serializeDocument(edited);
+  assert.equal((editedOutput.match(/edited everywhere/g) ?? []).length, 3);
+  assert.doesNotMatch(editedOutput, /remove me everywhere/);
+
+  const deleted = parseJsonl(Buffer.from(`${records.join("\n")}\n`));
+  const deletable = deleted.entries.find((entry) => entry.container === "replacement_history");
+  applyDeletions(deleted, [deletable.id]);
+  const deletedOutput = serializeDocument(deleted);
+  assert.doesNotMatch(deletedOutput, /remove me everywhere/);
+  assert.equal(deleted.records.find((record) => record.value?.type === "compacted").value.payload.replacement_history.length, 0);
+  assert.equal(deleted.validation.ok, true);
 });
 
 test("replacement uses atomic rename and never falls back to in-place overwrite", () => {
@@ -308,6 +344,9 @@ test("staged edits commit only while archived and verify after unarchive", () =>
       patches: [{ id: assistant.id, text: "Hot reloaded" }],
       deletions: [],
     });
+    const prompt = hotReloadPrompt(stage);
+    assert.match(prompt, /navigate_to_codex_page/);
+    assert.match(prompt, new RegExp(threadId));
     assert.throws(() => commitStagedAction(stage.requestId), (error) => error.code === "THREAD_NOT_ARCHIVED");
     const archivedPath = path.join(archivedDir, path.basename(sessionsPath));
     fs.renameSync(sessionsPath, archivedPath);

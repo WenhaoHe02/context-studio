@@ -209,7 +209,14 @@ function renderEntries() {
     const deleted = state.deletions.has(entry.id);
     const largeCollapsed = entry.editable && !deleted && text.length > 20000 && !state.expanded.has(entry.id);
     const title = ["tool-output", "mcp-call"].includes(entry.kind) ? entry.toolName : entry.role;
-    const meta = [entry.sourceLabel, entry.phase, entry.turnId ? `turn ${entry.turnId.slice(0, 8)}` : null, entry.contentPartCount > 1 ? `${entry.contentPartCount} parts` : null].filter(Boolean).join(" · ");
+    const desktopSync = entry.desktopDisplaySync === "matched"
+      ? "Desktop 同步"
+      : entry.desktopDisplaySync === "ambiguous"
+        ? "Desktop 原始记录匹配不唯一"
+        : entry.desktopDisplaySync === "not-found"
+          ? "无 Desktop 原始副本"
+          : null;
+    const meta = [entry.sourceLabel, desktopSync, entry.phase, entry.turnId ? `turn ${entry.turnId.slice(0, 8)}` : null, entry.contentPartCount > 1 ? `${entry.contentPartCount} parts` : null].filter(Boolean).join(" · ");
     return `<article class="entry-card ${changed ? "changed" : ""} ${deleted ? "deleted" : ""} ${entry.archived ? "archived" : ""} ${entry.editable || entry.deletable ? "" : "locked"}" data-id="${escapeHtml(entry.id)}">
       <div class="entry-head">
         <div class="entry-identity"><span class="role ${escapeHtml(entry.role)}">${escapeHtml(title)}</span><span class="entry-meta">${escapeHtml(meta)}</span></div>
@@ -404,7 +411,7 @@ async function save() {
     await loadRollouts();
     await loadBackups();
     if (result.staged) {
-      showToast("Edit staged. Codex is archiving, committing, and hot reloading the task...", false, { duration: 7000 });
+      showToast("修改已暂存：Codex 正在卸载、写入并重新打开目标任务，以刷新 Desktop 显示…", false, { duration: 7000 });
       return;
     }
     showToast(`保存成功。备份：${result.backupPath}`);
@@ -449,7 +456,7 @@ async function restoreSelectedBackup() {
     result.summary.title = state.current.title; state.current = result.summary; state.edits.clear(); state.deletions.clear();
     renderCurrent(); await loadRollouts(); await loadBackups();
     if (result.staged) {
-      showToast("Restore staged. Codex is hot reloading the selected backup...", false, { centered: true, duration: 7000 });
+      showToast("恢复已暂存：Codex 正在重新加载并打开目标任务，以刷新 Desktop 显示…", false, { centered: true, duration: 7000 });
       return;
     }
     showToast("备份版本已恢复", false, { centered: true, duration: 1600 });

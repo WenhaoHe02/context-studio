@@ -30,6 +30,7 @@ Long Codex tasks accumulate messages, reasoning state, tool transactions, skill 
 - **Visual rollout explorer** — browse tasks by title, parent/child relationship, lifecycle state, and modification time.
 - **Context-aware editing** — edit user/assistant text and matched string tool outputs; structural records stay locked.
 - **Safe whole-item deletion** — remove completed reasoning, paired tool/MCP transactions, and pure skill fragments after the latest compaction.
+- **Desktop-visible synchronization** — matched compacted messages update or remove their original transcript records too, then the target task is reopened so Desktop rebuilds visible history.
 - **Official token calibration** — combine per-item estimates with Codex `token_count` events.
 - **Visible cache hit rates** — see official latest-request and cumulative hit rates directly in the sidebar, with cached and uncached input tokens separated.
 - **Backup discipline** — one immutable pre-edit original, followed only by user-requested manual versions.
@@ -103,7 +104,7 @@ mcp/server.mjs
 
 Install the repository through a local Codex marketplace or the plugin-development workflow supported by your Codex release. Open Context Studio from a separate controller task and select only an idle target task—never the controller task hosting the app.
 
-The embedded workflow stages a write, asks Codex to archive/unload the target, commits the checked bytes, unarchives/reloads the task, and verifies the final hash.
+The embedded workflow stages a write, asks Codex to archive/unload the target, commits the checked bytes, unarchives the task, verifies the final hash, and opens the target so Desktop rebuilds its visible turns from the edited rollout.
 
 ## What can be changed?
 

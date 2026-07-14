@@ -14,6 +14,8 @@ This skill opens an embedded visual editor for Codex rollout history.
    - Call `commit_staged_context_action` with the staged request id.
    - Always call `codex_app.set_thread_archived` with `archived: false`, including when commit fails.
    - If commit succeeded, call `verify_staged_context_action` with the same request id.
+   - If verification succeeded, call `codex_app.navigate_to_codex_page` with the target thread id. This reopens the task after its app-server cache was unloaded so Codex Desktop rebuilds visible turns from the committed rollout.
+   - If navigation is unavailable or fails, do not undo a verified edit; report that the Desktop transcript still needs to be reopened manually.
 4. Never call `commit_staged_context_action` before the archive call succeeds. The MCP server also rejects commits whose rollout is not under `archived_sessions`.
 5. Do not bypass `THREAD_ACTIVE`, `RACE_DETECTED`, `THREAD_NOT_ARCHIVED`, `FILE_BUSY`, or hash-verification errors.
 6. When the widget posts a full-parent-context subagent fork request, call `codex_app.send_message_to_thread` exactly as specified by the widget. The selected parent was verified idle. Its message instructs that parent to call `spawn_agent` with `fork_turns="all"`, which preserves the real parent/subagent relationship and inherits all completed parent history. Do not substitute `codex_app.fork_thread`, `codex_app.create_thread`, or JSONL copying.

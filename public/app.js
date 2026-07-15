@@ -1,3 +1,5 @@
+import { analyzePrefixReuse as analyzePrefixReuseState, matchesEntryFilter } from "./prefix-reuse.js";
+
 const state = {
   rollouts: [],
   current: null,
@@ -8,7 +10,7 @@ const state = {
   expanded: new Set(),
   page: 1,
   pageSize: 40,
-  filter: "all",
+  filter: "active",
   query: "",
   syncing: false,
 };
@@ -24,6 +26,8 @@ const els = {
   historyTokens: $("#historyTokens"), editedTokens: $("#editedTokens"), savedTokens: $("#savedTokens"),
   externalTokens: $("#externalTokens"), projectedTokens: $("#projectedTokens"), budgetNote: $("#budgetNote"),
   budgetRing: $("#budgetRing"), budgetPercent: $("#budgetPercent"), actualUsage: $("#actualUsage"),
+  prefixReuseBadge: $("#prefixReuseBadge"), prefixReuseTokens: $("#prefixReuseTokens"),
+  prefixReuseRatio: $("#prefixReuseRatio"), prefixReuseDetail: $("#prefixReuseDetail"),
   toast: $("#toast"), modal: $("#confirmModal"), idleConfirm: $("#idleConfirm"),
   confirmSave: $("#confirmSave"), cancelSave: $("#cancelSave"), saveSummary: $("#saveSummary"),
 };
@@ -42,6 +46,25 @@ function editedEntryTokens(entry, text) {
 }
 function currentEntryTokens(entry) {
   return state.edits.has(entry.id) ? editedEntryTokens(entry, currentText(entry)) : entry.tokens;
+}
+
+function analyzePrefixReuse() {
+  return analyzePrefixReuseState({
+    segments: state.current?.contextStats?.prefixSegments || [],
+    entries: state.current?.entries || [],
+    edits: state.edits,
+    deletions: state.deletions,
+    activeTokens: state.current?.contextStats?.activeVisibleTokens || 0,
+  });
+}
+
+function renderPrefixReuse() {
+  const result = analyzePrefixReuse();
+  els.prefixReuseBadge.textContent = result.badge;
+  els.prefixReuseBadge.className = `badge prefix-${result.kind}`;
+  els.prefixReuseTokens.textContent = `≈ ${fmtNumber(result.preservedTokens)} tokens`;
+  els.prefixReuseRatio.textContent = `预计保留 ${result.ratio.toFixed(1)}% 的本地有效历史前缀`;
+  els.prefixReuseDetail.textContent = result.detail;
 }
 
 async function api(path, options = {}) {
@@ -184,14 +207,7 @@ function renderEntries() {
   if (!state.current) return;
   const query = state.query.toLowerCase();
   const matchedEntries = state.current.entries.filter((entry) => {
-    const filterMatch = state.filter === "all"
-      || state.filter === entry.kind
-      || (state.filter === "active" && entry.inActiveContext)
-      || (state.filter === "archived" && entry.archived)
-      || (state.filter === "editable" && entry.editable)
-      || (state.filter === "tool-output" && ["tool-output", "mcp-call"].includes(entry.kind))
-      || (state.filter === "deletable" && entry.deletable)
-      || (state.filter === "locked" && !entry.editable && !entry.deletable);
+    const filterMatch = matchesEntryFilter(entry, state.filter);
     const searchMatch = !query || `${entry.role} ${entry.toolName || ""} ${currentText(entry)}`.toLowerCase().includes(query);
     return filterMatch && searchMatch;
   });
@@ -375,6 +391,7 @@ function renderBudget() {
   } else {
     els.budgetNote.textContent = `以最近一次真实输入 ${fmtNumber(measuredInput)} tokens 校准；外部估算包含系统提示、工具 schema、插件/skill 注入及近似误差。${inactiveChanges ? ` 另有 ${inactiveChanges} 项修改位于 compact 前：完整日志已更新，但不会改变当前输入圆环。` : ""}`;
   }
+  renderPrefixReuse();
 }
 
 function updateDirtyState() {
@@ -390,7 +407,8 @@ function openSaveModal() {
     before += entry.tokens;
     if (!state.deletions.has(entry.id)) after += currentEntryTokens(entry);
   }
-  els.saveSummary.innerHTML = `文本修改：<strong>${state.edits.size}</strong><br>整项删除：<strong>${state.deletions.size}</strong><br>历史估算：<strong>${fmtNumber(before)}</strong> → <strong>${fmtNumber(after)}</strong> tokens<br>线程：<strong>${escapeHtml(state.current.title)}</strong>`;
+  const prefix = analyzePrefixReuse();
+  els.saveSummary.innerHTML = `文本修改：<strong>${state.edits.size}</strong><br>整项删除：<strong>${state.deletions.size}</strong><br>历史估算：<strong>${fmtNumber(before)}</strong> → <strong>${fmtNumber(after)}</strong> tokens<br>前缀复用：<strong>${escapeHtml(prefix.badge)}</strong>，预计保留 <strong>${prefix.ratio.toFixed(1)}%</strong> 本地有效历史前缀<br>线程：<strong>${escapeHtml(state.current.title)}</strong>`;
   els.idleConfirm.checked = false;
   els.confirmSave.disabled = true;
   els.modal.classList.remove("hidden");

@@ -204,6 +204,14 @@ button { color: inherit; }
 .inspector-section { margin-top: 19px; }
 .inspector-section h3 { margin: 0 0 9px; font-size: 11px; }
 .actual-usage { padding: 10px; border: 1px solid var(--line); border-radius: 9px; font-size: 10px; line-height: 1.7; }
+.section-title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.section-title-row h3 { margin-top: 3px; }
+.prefix-reuse-card { padding: 11px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel-2); }
+.prefix-reuse-card > strong { display: block; font-size: 17px; font-variant-numeric: tabular-nums; }
+.prefix-reuse-card > span { display: block; margin-top: 2px; color: var(--muted); font-size: 9px; }
+.prefix-reuse-card p { margin: 9px 0 0; color: var(--text); font-size: 9px; line-height: 1.55; }
+.badge.prefix-unchanged, .badge.prefix-inactive, .badge.prefix-suffix { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 30%, var(--line)); background: color-mix(in srgb, var(--accent) 9%, var(--panel)); }
+.badge.prefix-broken { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 35%, var(--line)); background: color-mix(in srgb, var(--danger) 8%, var(--panel)); }
 .guardrails { margin: 0; padding: 0; list-style: none; }
 .guardrails li { position: relative; padding: 6px 0 6px 18px; color: var(--muted); font-size: 10px; }
 .guardrails li::before { content: "✓"; position: absolute; left: 0; color: var(--accent); font-weight: 900; }

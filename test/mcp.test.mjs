@@ -57,6 +57,8 @@ test("MCP server advertises the embedded app and guarded commit tools", async (c
   assert.match(resource.contents[0].text, /__CONTEXT_STUDIO_OPEN_BROWSER__/);
   assert.match(resource.contents[0].text, /Context Studio/);
   assert.match(resource.contents[0].text, /缓存命中率/);
+  assert.match(resource.contents[0].text, /function analyzePrefixReuse/);
+  assert.doesNotMatch(resource.contents[0].text, /import\s+\{[^}]*analyzePrefixReuse/);
 
   const browserUrl = resource.contents[0].text.match(/window\.__CONTEXT_STUDIO_BROWSER_URL__=("http:\/\/127\.0\.0\.1:[^";]+\/+")/)?.[1];
   assert.ok(browserUrl);

@@ -190,10 +190,18 @@ function bridgeScript() {
 })();`;
 }
 
+function bundledAppScript() {
+  const helpers = fs.readFileSync(path.join(root, "public", "prefix-reuse.js"), "utf8")
+    .replace(/^export\s+/gm, "");
+  const app = fs.readFileSync(path.join(root, "public", "app.js"), "utf8")
+    .replace(/^import\s+[^;]+;\s*/m, "");
+  return `${helpers}\n${app}`.replaceAll("</script>", "<\\/script>");
+}
+
 function widgetHtml() {
   let html = fs.readFileSync(path.join(root, "public", "index.html"), "utf8");
   const css = fs.readFileSync(path.join(root, "public", "styles.css"), "utf8");
-  const app = fs.readFileSync(path.join(root, "public", "app.js"), "utf8").replaceAll("</script>", "<\\/script>");
+  const app = bundledAppScript();
   html = html.replace(/<link[^>]+href="\/styles\.css"[^>]*>/, `<style>${css}</style>`);
   html = html.replace(/<script type="module" src="\/app\.js"><\/script>/, `<script>${bridgeScript()}</script><script>window.__CONTEXT_STUDIO_BROWSER_URL__=${JSON.stringify(browserStudioUrl)};</script><script type="module">${app}</script>`);
   return html;
@@ -202,7 +210,7 @@ function widgetHtml() {
 function browserHtml() {
   let html = fs.readFileSync(path.join(root, "public", "index.html"), "utf8");
   const css = fs.readFileSync(path.join(root, "public", "styles.css"), "utf8");
-  const app = fs.readFileSync(path.join(root, "public", "app.js"), "utf8").replaceAll("</script>", "<\\/script>");
+  const app = bundledAppScript();
   const prefix = `/${browserToken}`;
   const bridge = `window.__CONTEXT_STUDIO_EXTERNAL__=true;window.__CONTEXT_STUDIO_MCP_CALL__=async(path,options={})=>{const response=await fetch(${JSON.stringify(prefix)}+path,options);const data=await response.json();if(!response.ok){const error=new Error(data.error?.message||"Request failed");error.code=data.error?.code;throw error;}return data;};`;
   html = html.replace(/<link[^>]+href="\/styles\.css"[^>]*>/, `<style>${css}</style>`);

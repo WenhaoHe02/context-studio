@@ -28,11 +28,13 @@ Long Codex tasks accumulate messages, reasoning state, tool transactions, skill 
 ## Highlights
 
 - **Visual rollout explorer** — browse tasks by title, parent/child relationship, lifecycle state, and modification time.
+- **Active context first** — normal views show only the latest replacement history and post-compaction suffix; pre-compaction source records stay available in a separate opt-in archive view.
 - **Context-aware editing** — edit user/assistant text and matched string tool outputs; structural records stay locked.
 - **Safe whole-item deletion** — remove completed reasoning, paired tool/MCP transactions, and pure skill fragments after the latest compaction.
 - **Desktop-visible synchronization** — matched compacted messages update or remove their original transcript records too, then the target task is reopened so Desktop rebuilds visible history.
 - **Official token calibration** — combine per-item estimates with Codex `token_count` events.
 - **Visible cache hit rates** — see official latest-request and cumulative hit rates directly in the sidebar, with cached and uncached input tokens separated.
+- **Prefix-reuse impact preview** — detect whether edits only touch the active prompt tail, and show the first changed item plus the estimated reusable local-history prefix in tokens and percent.
 - **Backup discipline** — one immutable pre-edit original, followed only by user-requested manual versions.
 - **Race-resistant writes** — idle checks, SHA-256 comparison, archive/unload workflow, structural validation, and atomic replacement.
 - **Light and dark themes** — responsive three-pane UI with a fast localhost browser workbench.
@@ -130,6 +132,8 @@ cache hit rate = cached_input_tokens / input_tokens
 ```
 
 The UI reports both the latest request and cumulative session rate. Without a usable `token_count` event, it displays “unavailable” rather than inventing a value. External system prompts, tool schemas, memory, skill injection, and future Codex transformations cannot be reconstructed exactly from rollout text alone.
+
+The prefix-reuse preview compares replacement history and the post-compaction suffix in their actual model order. Editing the final item or deleting a contiguous tail reports “tail only”; retaining old items after the first change reports a broken middle prefix. This is a conservative local estimate, not proof that a server-side cache entry still exists, and it excludes context injected outside the JSONL.
 
 ## Backups
 

@@ -1,6 +1,6 @@
 {
   "name": "codex-context-studio",
-  "version": "0.3.0+codex.20260713073430",
+  "version": "0.3.0+codex.20260715021007",
   "description": "Safely inspect, edit, and budget Codex rollout context while Codex is idle.",
   "author": {
     "name": "Wenhao He"

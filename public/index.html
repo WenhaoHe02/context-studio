@@ -67,14 +67,13 @@
           </div>
           <div class="toolbar">
             <div class="segmented" role="group" aria-label="过滤器">
-              <button class="segment active" data-filter="all">全部</button>
-              <button class="segment" data-filter="active">当前有效</button>
+              <button class="segment active" data-filter="active">当前实际</button>
               <button class="segment" data-filter="editable">可修改</button>
               <button class="segment" data-filter="message">消息</button>
               <button class="segment" data-filter="tool-output">工具输出</button>
               <button class="segment" data-filter="deletable">可删除</button>
               <button class="segment" data-filter="locked">系统只读</button>
-              <button class="segment" data-filter="archived">归档</button>
+              <button class="segment" data-filter="archived">compact 前归档</button>
             </div>
             <label class="inline-search">
               <span>⌕</span>
@@ -105,6 +104,22 @@
           <div class="total"><span>修改后输入估算</span><strong id="projectedTokens">—</strong></div>
         </div>
         <p id="budgetNote" class="section-note budget-note">基于最近一次真实输入校准；不会把 compact 前的旧历史重复计入。</p>
+
+        <div class="inspector-section prefix-reuse-section">
+          <div class="section-title-row">
+            <div>
+              <span class="eyebrow">PREFIX REUSE</span>
+              <h3>前缀复用影响</h3>
+            </div>
+            <span id="prefixReuseBadge" class="badge">未修改</span>
+          </div>
+          <div class="prefix-reuse-card">
+            <strong id="prefixReuseTokens">—</strong>
+            <span id="prefixReuseRatio">本地有效历史前缀</span>
+            <p id="prefixReuseDetail">修改内容后实时判断。</p>
+          </div>
+          <p class="section-note">按模型可见 JSONL 的实际顺序估算。外部系统提示、工具 schema、插件/skill 注入和服务端缓存是否仍驻留不可见，因此不能保证真实命中。</p>
+        </div>
 
         <div class="inspector-section">
           <h3>上次服务端统计</h3>

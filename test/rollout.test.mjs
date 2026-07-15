@@ -107,6 +107,9 @@ test("token context uses the latest compaction base and model-visible suffix", (
   assert.equal(summary.entries.find((entry) => entry.text === "old history").inActiveContext, false);
   assert.equal(summary.entries.find((entry) => entry.text === "ignored suffix system").inActiveContext, false);
   assert.equal(summary.entries.find((entry) => entry.text === "new history").inActiveContext, true);
+  assert.equal(summary.contextStats.prefixSegments.length, 3);
+  assert.equal(summary.contextStats.prefixSegments.reduce((sum, segment) => sum + segment.tokens, 0), expected);
+  assert.ok(summary.contextStats.prefixSegments.at(-1).editId);
 });
 
 test("edits and deletes items inside the latest compacted replacement history", () => {
@@ -129,6 +132,13 @@ test("edits and deletes items inside the latest compacted replacement history", 
   applyPatches(doc, [{ id: activeUser.id, text: "short compacted user" }]);
   const reasoning = doc.entries.find((entry) => entry.container === "replacement_history" && entry.kind === "reasoning");
   const tool = doc.entries.find((entry) => entry.container === "replacement_history" && entry.kind === "mcp-call");
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "context-studio-prefix-segments-"));
+  const filePath = path.join(dir, "rollout.jsonl");
+  fs.writeFileSync(filePath, `${records.join("\n")}\n`);
+  const toolSegments = readRollout(filePath).summary.contextStats.prefixSegments.filter((segment) => segment.deleteId === tool.id);
+  assert.equal(toolSegments.length, 2);
+  assert.equal(toolSegments[0].editId, null);
+  assert.equal(toolSegments[1].editId, tool.id);
   applyDeletions(doc, [reasoning.id, tool.id]);
   const output = serializeDocument(doc);
   assert.match(output, /short compacted user/);

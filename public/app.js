@@ -1,4 +1,4 @@
-import { analyzePrefixReuse as analyzePrefixReuseState, matchesEntryFilter } from "./prefix-reuse.js";
+import { analyzePrefixReuseState, matchesEntryFilter } from "./prefix-reuse.js";
 
 const state = {
   rollouts: [],

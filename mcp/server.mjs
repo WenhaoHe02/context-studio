@@ -20,6 +20,7 @@ import {
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const manifest = JSON.parse(fs.readFileSync(path.join(root, ".codex-plugin", "plugin.json"), "utf8"));
 const TEMPLATE_URI = `ui://context-studio/editor-${manifest.version}.html`;
+const COMPATIBLE_TEMPLATE_URI = /^ui:\/\/context-studio\/editor-[^/?#]+\.html$/;
 const MIME = "text/html;profile=mcp-app";
 const JsonRpcError = { METHOD_NOT_FOUND: -32601, INVALID_PARAMS: -32602, INTERNAL: -32603 };
 const browserToken = crypto.randomBytes(24).toString("hex");
@@ -435,8 +436,10 @@ async function handle(message) {
   } else if (method === "ping") result(id, {});
   else if (method === "resources/list") result(id, { resources: [{ uri: TEMPLATE_URI, name: "context-studio-editor", title: "Codex Context Studio", mimeType: MIME }] });
   else if (method === "resources/read") {
-    if (params?.uri !== TEMPLATE_URI) throw Object.assign(new Error("Unknown UI resource."), { code: "UNKNOWN_RESOURCE" });
-    result(id, { contents: [{ uri: TEMPLATE_URI, mimeType: MIME, text: widgetHtml(), _meta: { ui: { prefersBorder: false } } }] });
+    if (typeof params?.uri !== "string" || !COMPATIBLE_TEMPLATE_URI.test(params.uri)) {
+      throw Object.assign(new Error("Unknown UI resource."), { code: "UNKNOWN_RESOURCE" });
+    }
+    result(id, { contents: [{ uri: params.uri, mimeType: MIME, text: widgetHtml(), _meta: { ui: { prefersBorder: false } } }] });
   } else if (method === "tools/list") result(id, { tools });
   else if (method === "tools/call") result(id, await callTool(params?.name, params?.arguments || {}));
   else if (id !== undefined) error(id, JsonRpcError.METHOD_NOT_FOUND, `Method not found: ${method}`);

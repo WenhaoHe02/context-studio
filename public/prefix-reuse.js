@@ -11,7 +11,7 @@ function longestCommonPrefix(left, right) {
   return a.slice(0, index);
 }
 
-export function analyzePrefixReuse({ segments = [], entries = [], edits = new Map(), deletions = new Set(), activeTokens = 0 }) {
+export function analyzePrefixReuseState({ segments = [], entries = [], edits = new Map(), deletions = new Set(), activeTokens = 0 }) {
   const totalTokens = activeTokens || segments.reduce((sum, segment) => sum + segment.tokens, 0);
   const changed = (segment) => (segment.deleteId && deletions.has(segment.deleteId))
     || (segment.editId && edits.has(segment.editId));

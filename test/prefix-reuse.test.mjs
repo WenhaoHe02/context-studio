@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { analyzePrefixReuse, matchesEntryFilter } from "../public/prefix-reuse.js";
+import { analyzePrefixReuseState, matchesEntryFilter } from "../public/prefix-reuse.js";
 
 const entries = [
   { id: "first", text: "static first message" },
@@ -13,7 +13,7 @@ const segments = [
 ];
 
 test("reports an edit to the final model-visible item as suffix-only", () => {
-  const result = analyzePrefixReuse({
+  const result = analyzePrefixReuseState({
     segments,
     entries,
     edits: new Map([["last", "shared beginning and new tail"]]),
@@ -26,7 +26,7 @@ test("reports an edit to the final model-visible item as suffix-only", () => {
 });
 
 test("reports an early edit followed by unchanged content as a broken middle prefix", () => {
-  const result = analyzePrefixReuse({
+  const result = analyzePrefixReuseState({
     segments,
     entries,
     edits: new Map([["first", "changed first message"]]),
@@ -38,7 +38,7 @@ test("reports an early edit followed by unchanged content as a broken middle pre
 });
 
 test("ignores edits that are outside the current model-visible sequence", () => {
-  const result = analyzePrefixReuse({
+  const result = analyzePrefixReuseState({
     segments,
     entries,
     edits: new Map([["archived", "changed"]]),

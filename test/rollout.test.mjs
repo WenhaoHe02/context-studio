@@ -110,6 +110,24 @@ test("token context uses the latest compaction base and model-visible suffix", (
   assert.equal(summary.contextStats.prefixSegments.length, 3);
   assert.equal(summary.contextStats.prefixSegments.reduce((sum, segment) => sum + segment.tokens, 0), expected);
   assert.ok(summary.contextStats.prefixSegments.at(-1).editId);
+  assert.equal(summary.entries.find((entry) => entry.text === "compact summary").contextScope, "compact");
+  assert.equal(summary.entries.find((entry) => entry.text === "new history").contextScope, "post-compact");
+  assert.equal(summary.entries.find((entry) => entry.text === "old history").contextScope, "pre-compact");
+});
+
+test("shows a legacy compacted message as a standalone full summary", () => {
+  const records = [
+    line("session_meta", { id: "thread-legacy-compact", history_mode: "legacy" }),
+    line("response_item", { type: "message", role: "user", content: [{ type: "input_text", text: "old source" }] }),
+    line("compacted", { message: "legacy compact summary in full" }),
+    line("response_item", { type: "message", role: "user", content: [{ type: "input_text", text: "new suffix" }] }),
+  ];
+  const doc = parseJsonl(Buffer.from(`${records.join("\n")}\n`));
+  const compact = doc.entries.find((entry) => entry.kind === "compaction-summary");
+  assert.equal(compact.text, "legacy compact summary in full");
+  assert.equal(compact.contextScope, "compact");
+  assert.equal(compact.inActiveContext, true);
+  assert.equal(compact.editable, false);
 });
 
 test("edits and deletes items inside the latest compacted replacement history", () => {
@@ -118,9 +136,14 @@ test("edits and deletes items inside the latest compacted replacement history", 
     line("response_item", { type: "message", role: "user", content: [{ type: "input_text", text: "archived original" }] }),
     line("compacted", { message: "", replacement_history: [
       { type: "message", role: "user", content: [{ type: "input_text", text: "active compacted user" }] },
+      { type: "message", role: "user", content: [
+        { type: "input_text", text: "message with image" },
+        { type: "input_image", image_url: "data:image/png;base64,AAAA" },
+      ] },
       { type: "function_call", name: "mcp__demo__read", call_id: "compact-call", arguments: "{}" },
       { type: "function_call_output", call_id: "compact-call", output: "compacted output" },
       { type: "reasoning", summary: [{ type: "summary_text", text: "compacted reasoning" }], encrypted_content: "encrypted" },
+      { type: "compaction", encrypted_content: "compact-encrypted" },
     ] }),
   ];
   const doc = parseJsonl(Buffer.from(`${records.join("\n")}\n`));
@@ -132,6 +155,16 @@ test("edits and deletes items inside the latest compacted replacement history", 
   applyPatches(doc, [{ id: activeUser.id, text: "short compacted user" }]);
   const reasoning = doc.entries.find((entry) => entry.container === "replacement_history" && entry.kind === "reasoning");
   const tool = doc.entries.find((entry) => entry.container === "replacement_history" && entry.kind === "mcp-call");
+  const compactState = doc.entries.find((entry) => entry.container === "replacement_history" && entry.kind === "compaction-state");
+  const imagePart = doc.entries.find((entry) => entry.container === "replacement_history" && entry.kind === "message-part");
+  assert.equal(imagePart.contextScope, "compact");
+  assert.equal(imagePart.role, "image");
+  assert.match(imagePart.text, /data:image\/png;base64,AAAA/);
+  assert.equal(imagePart.tokens, 1844);
+  assert.equal(imagePart.editable, false);
+  assert.equal(compactState.contextScope, "compact");
+  assert.equal(compactState.editable, false);
+  assert.equal(compactState.deletable, false);
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "context-studio-prefix-segments-"));
   const filePath = path.join(dir, "rollout.jsonl");
   fs.writeFileSync(filePath, `${records.join("\n")}\n`);

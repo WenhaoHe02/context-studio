@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { analyzePrefixReuseState, matchesEntryFilter } from "../public/prefix-reuse.js";
+import { analyzePrefixReuseState, matchesEntryFilter, matchesEntryScope } from "../public/prefix-reuse.js";
 
 const entries = [
   { id: "first", text: "static first message" },
@@ -50,11 +50,13 @@ test("ignores edits that are outside the current model-visible sequence", () => 
 });
 
 test("normal filters only show active model context while archive remains opt-in", () => {
-  const active = { kind: "message", editable: true, deletable: true, inActiveContext: true, archived: false };
-  const archived = { kind: "message", editable: true, deletable: false, inActiveContext: false, archived: true };
-  assert.equal(matchesEntryFilter(active, "active"), true);
-  assert.equal(matchesEntryFilter(archived, "active"), false);
-  assert.equal(matchesEntryFilter(archived, "editable"), false);
-  assert.equal(matchesEntryFilter(archived, "message"), false);
-  assert.equal(matchesEntryFilter(archived, "archived"), true);
+  const compact = { kind: "message", contextScope: "compact", editable: true, inActiveContext: true };
+  const suffix = { kind: "message", contextScope: "post-compact", editable: true, inActiveContext: true };
+  const archived = { kind: "message", contextScope: "pre-compact", editable: true, inActiveContext: false, archived: true };
+  assert.equal(matchesEntryScope(compact, "compact"), true);
+  assert.equal(matchesEntryScope(suffix, "compact"), false);
+  assert.equal(matchesEntryScope(suffix, "post-compact"), true);
+  assert.equal(matchesEntryScope(archived, "pre-compact"), true);
+  assert.equal(matchesEntryFilter(archived, "editable"), true);
+  assert.equal(matchesEntryFilter(archived, "message"), true);
 });

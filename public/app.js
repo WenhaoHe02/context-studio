@@ -1,4 +1,4 @@
-import { analyzePrefixReuseState, matchesEntryFilter } from "./prefix-reuse.js";
+import { analyzePrefixReuseState, matchesEntryFilter, matchesEntryScope } from "./prefix-reuse.js";
 
 const state = {
   rollouts: [],
@@ -10,7 +10,8 @@ const state = {
   expanded: new Set(),
   page: 1,
   pageSize: 40,
-  filter: "active",
+  scope: "compact",
+  filter: "all",
   query: "",
   syncing: false,
 };
@@ -168,6 +169,8 @@ async function openRollout(filePath, force = false) {
     state.deletions.clear();
     state.expanded.clear();
     state.page = 1;
+    state.scope = data.contextStats?.hasCompaction ? "compact" : "post-compact";
+    state.filter = "all";
     renderRollouts();
     renderCurrent();
     await loadBackups();
@@ -179,8 +182,28 @@ function renderCurrent() {
   els.emptyEditor.classList.add("hidden");
   els.editorContent.classList.remove("hidden");
   renderStatusOnly();
+  renderScopeControls();
   renderEntries();
   renderUsage();
+}
+
+function renderScopeControls() {
+  if (!state.current) return;
+  const counts = { compact: 0, "post-compact": 0, "pre-compact": 0 };
+  for (const entry of state.current.entries) {
+    for (const scope of Object.keys(counts)) {
+      if (matchesEntryScope(entry, scope)) { counts[scope] += 1; break; }
+    }
+  }
+  const hasCompaction = Boolean(state.current.contextStats?.hasCompaction);
+  document.querySelectorAll(".scope-segment").forEach((button) => {
+    const scope = button.dataset.scope;
+    const label = scope === "compact" ? "Compact 内容" : scope === "pre-compact" ? "Compact 前原始" : hasCompaction ? "Compact 后新增" : "当前完整历史";
+    button.textContent = `${label} · ${fmtNumber(counts[scope])}`;
+    button.classList.toggle("active", state.scope === scope);
+    button.disabled = counts[scope] === 0;
+  });
+  document.querySelectorAll(".type-segment").forEach((button) => button.classList.toggle("active", state.filter === button.dataset.filter));
 }
 
 function renderStatusOnly() {
@@ -207,7 +230,7 @@ function renderEntries() {
   if (!state.current) return;
   const query = state.query.toLowerCase();
   const matchedEntries = state.current.entries.filter((entry) => {
-    const filterMatch = matchesEntryFilter(entry, state.filter);
+    const filterMatch = matchesEntryScope(entry, state.scope) && matchesEntryFilter(entry, state.filter);
     const searchMatch = !query || `${entry.role} ${entry.toolName || ""} ${currentText(entry)}`.toLowerCase().includes(query);
     return filterMatch && searchMatch;
   });
@@ -533,9 +556,11 @@ els.saveButton.addEventListener("click", openSaveModal);
 els.cancelSave.addEventListener("click", () => els.modal.classList.add("hidden"));
 els.idleConfirm.addEventListener("change", () => { els.confirmSave.disabled = !els.idleConfirm.checked; });
 els.confirmSave.addEventListener("click", save);
-document.querySelectorAll(".segment").forEach((button) => button.addEventListener("click", () => {
-  document.querySelectorAll(".segment").forEach((item) => item.classList.remove("active"));
-  button.classList.add("active"); state.filter = button.dataset.filter; state.page = 1; renderEntries();
+document.querySelectorAll(".scope-segment").forEach((button) => button.addEventListener("click", () => {
+  state.scope = button.dataset.scope; state.page = 1; renderScopeControls(); renderEntries();
+}));
+document.querySelectorAll(".type-segment").forEach((button) => button.addEventListener("click", () => {
+  state.filter = button.dataset.filter; state.page = 1; renderScopeControls(); renderEntries();
 }));
 window.addEventListener("beforeunload", (event) => { if (state.edits.size || state.deletions.size) { event.preventDefault(); event.returnValue = ""; } });
 

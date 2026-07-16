@@ -143,10 +143,14 @@ button { color: inherit; }
 .file-title-row h2 { margin: 0; font-size: 15px; }
 .file-path { max-width: 680px; margin: 6px 0 0; color: var(--muted); font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .file-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; font-size: 10px; color: var(--muted); }
-.toolbar { height: 54px; display: flex; align-items: center; justify-content: space-between; padding: 9px 20px; border-bottom: 1px solid var(--line-soft); }
+.toolbar { min-height: 82px; display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 9px 20px; border-bottom: 1px solid var(--line-soft); }
+.filter-stack { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.filter-row { display: flex; align-items: center; gap: 7px; }
+.filter-label { width: 24px; flex: 0 0 auto; color: var(--muted); font-size: 9px; font-weight: 800; }
 .segmented { display: flex; border: 1px solid var(--line); border-radius: 8px; padding: 2px; background: var(--surface-inset); }
 .segment { border: 0; background: transparent; color: var(--muted); padding: 6px 10px; border-radius: 6px; font-size: 10px; font-weight: 760; cursor: pointer; }
 .segment.active { background: var(--panel-2); color: var(--text); }
+.segment:disabled { opacity: .38; cursor: not-allowed; }
 
 .entry-list { flex: 1; overflow: auto; padding: 18px 20px 120px; }
 .entry-card { position: relative; margin: 0 auto 12px; max-width: 900px; border: 1px solid var(--line); border-radius: 12px; background: color-mix(in srgb, var(--panel) 90%, var(--bg)); overflow: hidden; }

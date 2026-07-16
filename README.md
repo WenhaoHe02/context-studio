@@ -28,7 +28,7 @@ Long Codex tasks accumulate messages, reasoning state, tool transactions, skill 
 ## Highlights
 
 - **Visual rollout explorer** — browse tasks by title, parent/child relationship, lifecycle state, and modification time.
-- **Active context first** — normal views show only the latest replacement history and post-compaction suffix; pre-compaction source records stay available in a separate opt-in archive view.
+- **Context separated by source** — the latest replacement history, post-compaction additions, and pre-compaction source records each have their own view, followed by independent type filters.
 - **Context-aware editing** — edit user/assistant text and matched string tool outputs; structural records stay locked.
 - **Safe whole-item deletion** — remove completed reasoning, paired tool/MCP transactions, and pure skill fragments after the latest compaction.
 - **Desktop-visible synchronization** — matched compacted messages update or remove their original transcript records too, then the target task is reopened so Desktop rebuilds visible history.

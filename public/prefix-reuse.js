@@ -48,12 +48,17 @@ export function analyzePrefixReuseState({ segments = [], entries = [], edits = n
   };
 }
 
+export function matchesEntryScope(entry, scope) {
+  if (scope === "compact") return entry.contextScope === "compact" || entry.container === "replacement_history";
+  if (scope === "pre-compact") return entry.contextScope === "pre-compact" || Boolean(entry.archived);
+  return entry.contextScope === "post-compact" || (entry.inActiveContext && entry.container !== "replacement_history");
+}
+
 export function matchesEntryFilter(entry, filter) {
-  if (filter === "archived") return Boolean(entry.archived);
-  if (!entry.inActiveContext) return false;
   if (["active", "all"].includes(filter)) return true;
   if (filter === "editable") return Boolean(entry.editable);
   if (filter === "tool-output") return ["tool-output", "mcp-call"].includes(entry.kind);
+  if (filter === "message") return ["message", "message-part"].includes(entry.kind);
   if (filter === "deletable") return Boolean(entry.deletable);
   if (filter === "locked") return !entry.editable && !entry.deletable;
   return filter === entry.kind;
